@@ -1,5 +1,6 @@
 import {
 	appendInitialChild,
+	Container,
 	createInstance,
 	createTextInstance
 } from 'hostConfig';
@@ -19,6 +20,8 @@ export const completeWork = (wip: FiberNode) => {
 			} else {
 				// 构建 DOM
 				const instance = createInstance(wip.type, newProps);
+				// 将DOM插入DOM树中
+				appendAllChildren(instance, wip);
 				wip.stateNode = instance;
 			}
 			bubbleProperties(wip);
@@ -29,8 +32,6 @@ export const completeWork = (wip: FiberNode) => {
 			} else {
 				// 构建 DOM
 				const instance = createTextInstance(newProps.content);
-				// 将DOM插入DOM树中
-				appendAllChildren(instance, wip);
 				wip.stateNode = instance;
 			}
 			bubbleProperties(wip);
@@ -46,7 +47,7 @@ export const completeWork = (wip: FiberNode) => {
 	}
 };
 
-function appendAllChildren(parent: FiberNode, wip: FiberNode) {
+function appendAllChildren(parent: Container, wip: FiberNode) {
 	let node = wip.child;
 
 	while (node !== null) {
