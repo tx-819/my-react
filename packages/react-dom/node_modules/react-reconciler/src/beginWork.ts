@@ -38,7 +38,7 @@ function updateHostRoot(wip: FiberNode) {
 }
 
 function updateHostComponent(wip: FiberNode) {
-	const nextProps = wip.memoizedProps;
+	const nextProps = wip.pendingProps;
 	const nextChildren = nextProps.children;
 	reconcileChildren(wip, nextChildren);
 	return wip.child;
