@@ -9,6 +9,7 @@ let workInProgress: FiberNode | null = null;
 
 function perpareFreshStack(root: FiberRootNode) {
 	workInProgress = createWorkInProgress(root.current, {});
+	console.log(root.current.alternate === workInProgress);
 }
 
 export function scheduleUpdateOnFiber(fiber: FiberNode) {
@@ -55,7 +56,7 @@ function renderRoot(root: FiberRootNode) {
 function commitRoot(root: FiberRootNode) {
 	const finishedWork = root.finishedWork;
 
-	if (finishedWork == null) {
+	if (finishedWork === null) {
 		return;
 	}
 
@@ -104,7 +105,7 @@ function completeUnitOfWork(fiber: FiberNode) {
 	let node: FiberNode | null = fiber;
 
 	do {
-		completeWork(fiber);
+		completeWork(node);
 		const sibling = node.sibling;
 		if (sibling !== null) {
 			workInProgress = sibling;

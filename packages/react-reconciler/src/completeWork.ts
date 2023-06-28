@@ -19,7 +19,7 @@ export const completeWork = (wip: FiberNode) => {
 				// update
 			} else {
 				// 构建 DOM
-				const instance = createInstance(wip.type, newProps);
+				const instance = createInstance(wip.type);
 				// 将DOM插入DOM树中
 				appendAllChildren(instance, wip);
 				wip.stateNode = instance;
@@ -52,7 +52,7 @@ function appendAllChildren(parent: Container, wip: FiberNode) {
 
 	while (node !== null) {
 		if (node.tag === HostComponent || node.tag === HostText) {
-			appendInitialChild(parent, node.stateNode);
+			appendInitialChild(parent, node?.stateNode);
 		} else if (node.child !== null) {
 			node.child.return = node;
 			node = node.child;

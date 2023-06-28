@@ -50,7 +50,9 @@ const commitPlacement = (finishedWork: FiberNode) => {
 
 	// placement DOM
 	const hostParent = getHostParent(finishedWork);
-	if (hostParent) appendPlacementNodeIntoContainer(finishedWork, hostParent);
+	if (hostParent !== null) {
+		appendPlacementNodeIntoContainer(finishedWork, hostParent);
+	}
 };
 
 const getHostParent = (fiber: FiberNode): Container | null => {
