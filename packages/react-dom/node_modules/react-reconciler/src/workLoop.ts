@@ -9,7 +9,6 @@ let workInProgress: FiberNode | null = null;
 
 function perpareFreshStack(root: FiberRootNode) {
 	workInProgress = createWorkInProgress(root.current, {});
-	console.log(root.current.alternate === workInProgress);
 }
 
 export function scheduleUpdateOnFiber(fiber: FiberNode) {
