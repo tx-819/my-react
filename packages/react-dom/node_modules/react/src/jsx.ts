@@ -38,7 +38,7 @@ export const jsx = (type: ElementType, config: any, ...maybeChildren: any) => {
 
 			continue;
 		}
-		if (prop === 'ref') {
+		if (prop === 'ref' && val !== undefined) {
 			if (val !== undefined) {
 				ref = val;
 			}
@@ -75,7 +75,7 @@ export const jsxDEV = (type: ElementType, config: any) => {
 
 			continue;
 		}
-		if (prop === 'ref') {
+		if (prop === 'ref' && val !== undefined) {
 			if (val !== undefined) {
 				ref = val;
 			}
