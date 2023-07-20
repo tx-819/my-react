@@ -4,6 +4,7 @@ import {
 	createInstance,
 	createTextInstance
 } from 'hostConfig';
+import { updateFiberProps } from 'react-dom/src/syntheticEvent';
 import { FiberNode } from './fiber';
 import { NoFlags, Update } from './fiberFlags';
 import {
@@ -26,9 +27,12 @@ export const completeWork = (wip: FiberNode) => {
 		case HostComponent:
 			if (current !== null && wip.stateNode) {
 				// update
+				// 1.props是否变化
+				// 2.变了，标识 Update flag
+				updateFiberProps(wip.stateNode, newProps);
 			} else {
 				// 构建 DOM
-				const instance = createInstance(wip.type);
+				const instance = createInstance(wip.type, newProps);
 				// 将DOM插入DOM树中
 				appendAllChildren(instance, wip);
 				wip.stateNode = instance;
