@@ -44,6 +44,13 @@ function childReconciler(shouldTrackEffects: boolean) {
 		currentFirstChild: FiberNode | null,
 		newChild: any[]
 	) {
+		// 最后一个可复用fiber在current中的index
+		let lastPlacedIndex = 0;
+		// 创建的最后一个fiber
+		let lastNewFiber: FiberNode | null = null;
+		// 创建的第一个fiber
+		let firstNewFiber: FiberNode | null = null;
+
 		// 将current保存在map中
 		const existingChildren: ExistingChildren = new Map();
 		let current = currentFirstChild;
@@ -56,14 +63,50 @@ function childReconciler(shouldTrackEffects: boolean) {
 		for (let i = 0; i < newChild.length; i++) {
 			// 遍历newChild,寻找是否可复用
 			const after = newChild[i];
-			// 标记移动还是插入
 			const newFiber = updateFromMap(returnFiber, existingChildren, i, after);
 			if (newFiber === null) {
 				continue;
 			}
+
+			// 标记移动还是插入
+			newFiber.index = i;
+			newFiber.return = returnFiber;
+
+			if (lastNewFiber === null) {
+				lastNewFiber = newFiber;
+				firstNewFiber = newFiber;
+			} else {
+				lastNewFiber.sibling = newFiber;
+				lastNewFiber = lastNewFiber.sibling;
+			}
+
+			if (!shouldTrackEffects) {
+				continue;
+			}
+
+			const current = newFiber.alternate;
+			if (current !== null) {
+				const oldIndex = current.index;
+				if (oldIndex < lastPlacedIndex) {
+					// 移动
+					newFiber.flags |= Placement;
+					continue;
+				} else {
+					// 不移动
+					lastPlacedIndex = oldIndex;
+				}
+			} else {
+				// mount
+				newFiber.flags |= Placement;
+			}
 		}
 
 		// 将map剩下的标记为删除
+		existingChildren.forEach((fiber) => {
+			deleteChild(returnFiber, fiber);
+		});
+
+		return firstNewFiber;
 	}
 
 	function updateFromMap(
