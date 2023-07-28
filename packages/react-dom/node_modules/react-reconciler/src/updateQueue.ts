@@ -3,6 +3,7 @@ import { Aciton } from 'shared/ReactTypes';
 
 export interface Update<State> {
 	action: Aciton<State>;
+	next: Update<any> | null;
 }
 
 export interface UpdateQueue<State> {
@@ -15,7 +16,8 @@ export interface UpdateQueue<State> {
 // 创建 Update
 export const createUpdate = <State>(action: Aciton<State>): Update<State> => {
 	return {
-		action
+		action,
+		next: null
 	};
 };
 
@@ -33,6 +35,14 @@ export const enqueueUpdate = <State>(
 	updateQueue: UpdateQueue<State>,
 	update: Update<State>
 ) => {
+	const pending = updateQueue.shared.pending;
+	if (pending === null) {
+		update.next = update;
+	} else {
+		update.next = pending.next;
+		pending.next = update;
+	}
+
 	updateQueue.shared.pending = update;
 };
 
