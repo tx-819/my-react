@@ -3,6 +3,7 @@ import { Dispatcher } from 'react/src/currentDispatcher';
 import internals from 'shared/internals';
 import { Aciton } from 'shared/ReactTypes';
 import { FiberNode } from './fiber';
+import { requestUpdateLane } from './fiberLanes';
 import {
 	createUpdate,
 	createUpdateQueue,
@@ -140,9 +141,10 @@ function dispatchSetState<State>(
 	updateQueue: UpdateQueue<State>,
 	action: Aciton<State>
 ) {
-	const update = createUpdate(action);
+	const lane = requestUpdateLane();
+	const update = createUpdate(action, lane);
 	enqueueUpdate(updateQueue, update);
-	scheduleUpdateOnFiber(fiber);
+	scheduleUpdateOnFiber(fiber, lane);
 }
 
 function mountWorkInProgressHook(): Hook {

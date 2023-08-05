@@ -1,8 +1,10 @@
 import { Dispatch } from 'react/src/currentDispatcher';
 import { Aciton } from 'shared/ReactTypes';
+import { Lane } from './fiberLanes';
 
 export interface Update<State> {
 	action: Aciton<State>;
+	lane: Lane;
 	next: Update<any> | null;
 }
 
@@ -14,9 +16,13 @@ export interface UpdateQueue<State> {
 }
 
 // 创建 Update
-export const createUpdate = <State>(action: Aciton<State>): Update<State> => {
+export const createUpdate = <State>(
+	action: Aciton<State>,
+	lane: Lane
+): Update<State> => {
 	return {
 		action,
+		lane,
 		next: null
 	};
 };

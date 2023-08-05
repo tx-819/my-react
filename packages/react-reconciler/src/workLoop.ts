@@ -1,8 +1,17 @@
+import { scheduleMicroTask } from 'hostConfig';
 import { beginWork } from './beginWork';
 import { commitMutationEffects } from './commitWork';
 import { completeWork } from './completeWork';
 import { createWorkInProgress, FiberNode, FiberRootNode } from './fiber';
 import { MutationMask, NoFlags } from './fiberFlags';
+import {
+	getHighestPriorityLane,
+	Lane,
+	mergeLanes,
+	NoLane,
+	SyncLane
+} from './fiberLanes';
+import { flushSyncCallbacks, scheduleSyncCallback } from './syncTaskQueue';
 import { HostRoot } from './workTags';
 
 let workInProgress: FiberNode | null = null;
@@ -11,10 +20,32 @@ function perpareFreshStack(root: FiberRootNode) {
 	workInProgress = createWorkInProgress(root.current, {});
 }
 
-export function scheduleUpdateOnFiber(fiber: FiberNode) {
-	// todo 调度功能
+export function scheduleUpdateOnFiber(fiber: FiberNode, lane: Lane) {
 	const root = markUpdateFromFiberToRoot(fiber);
-	renderRoot(root);
+	markRootUpdated(root, lane);
+	ensureRootIsScheduled(root);
+}
+
+// schedule 阶段
+function ensureRootIsScheduled(root: FiberRootNode) {
+	const updateLane = getHighestPriorityLane(root.pendingLanes);
+	if (updateLane === NoLane) {
+		return;
+	}
+	if (updateLane === SyncLane) {
+		// 同步优先级 用微任务调度
+		if (__DEV__) {
+			console.log('在微任务中调度，优先级：', updateLane);
+		}
+		scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root, updateLane));
+		scheduleMicroTask(flushSyncCallbacks);
+	} else {
+		// 其他优先级 用宏任务调度
+	}
+}
+
+function markRootUpdated(root: FiberRootNode, lane: Lane) {
+	root.pendingLanes = mergeLanes(root.pendingLanes, lane);
 }
 
 function markUpdateFromFiberToRoot(fiber: FiberNode) {
@@ -30,7 +61,15 @@ function markUpdateFromFiberToRoot(fiber: FiberNode) {
 	return null;
 }
 
-function renderRoot(root: FiberRootNode) {
+function performSyncWorkOnRoot(root: FiberRootNode, lane: Lane) {
+	const nextLane = getHighestPriorityLane(root.pendingLanes);
+
+	if (nextLane !== SyncLane) {
+		// 其他比SyncLane低得优先级
+		// NoLane
+		ensureRootIsScheduled(root);
+		return;
+	}
 	// 初始化
 	perpareFreshStack(root);
 	do {
