@@ -15,9 +15,11 @@ import { flushSyncCallbacks, scheduleSyncCallback } from './syncTaskQueue';
 import { HostRoot } from './workTags';
 
 let workInProgress: FiberNode | null = null;
+let wipRootRenderLane: Lane = NoLane;
 
-function perpareFreshStack(root: FiberRootNode) {
+function prepareFreshStack(root: FiberRootNode, lane: Lane) {
 	workInProgress = createWorkInProgress(root.current, {});
+	wipRootRenderLane = lane;
 }
 
 export function scheduleUpdateOnFiber(fiber: FiberNode, lane: Lane) {
@@ -71,7 +73,7 @@ function performSyncWorkOnRoot(root: FiberRootNode, lane: Lane) {
 		return;
 	}
 	// 初始化
-	perpareFreshStack(root);
+	prepareFreshStack(root, lane);
 	do {
 		try {
 			workLoop();
@@ -86,6 +88,8 @@ function performSyncWorkOnRoot(root: FiberRootNode, lane: Lane) {
 
 	const finishedWork = root.current.alternate;
 	root.finishedWork = finishedWork;
+	root.finishedLane = lane;
+	wipRootRenderLane = NoLane;
 
 	// wip fiberNode树
 	commitRoot(root);
@@ -130,7 +134,7 @@ function workLoop() {
 	}
 }
 function performUnitOfWork(fiber: FiberNode) {
-	const next = beginWork(fiber);
+	const next = beginWork(fiber, wipRootRenderLane);
 	fiber.memoizedProps = fiber.pendingProps;
 
 	if (next === null) {
