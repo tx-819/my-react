@@ -7,6 +7,7 @@ import { MutationMask, NoFlags } from './fiberFlags';
 import {
 	getHighestPriorityLane,
 	Lane,
+	markRootFinished,
 	mergeLanes,
 	NoLane,
 	SyncLane
@@ -72,6 +73,11 @@ function performSyncWorkOnRoot(root: FiberRootNode, lane: Lane) {
 		ensureRootIsScheduled(root);
 		return;
 	}
+
+	if (__DEV__) {
+		console.log('render 阶段开始');
+	}
+
 	// 初始化
 	prepareFreshStack(root, lane);
 	do {
@@ -106,8 +112,15 @@ function commitRoot(root: FiberRootNode) {
 		console.warn('commit 阶段开始', finishedWork);
 	}
 
+	const lane = root.finishedLane;
+	if (lane === NoLane && __DEV__) {
+		console.error('commit阶段finishedLane不应该是NoLane');
+	}
 	// 重置
 	root.finishedWork = null;
+	root.finishedLane = NoLane;
+
+	markRootFinished(root, lane);
 
 	// 判断是否存在3个子阶段需要执行的操作
 	// root flags root subtreeFlags
